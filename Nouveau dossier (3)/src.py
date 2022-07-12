@@ -8,11 +8,11 @@ import subprocess
 
 
 
-
 def main() :
+    os.system('title Terminal')
     print("""
     
-    Séb-sh terminal v1.0
+    Séb-sh terminal v1.1
     bye.
     
     """)
@@ -63,7 +63,7 @@ def main() :
                 print(random.randint(1, int(command)))
         elif command == "credits":
             print("""
-            Séb-sh terminal v1.0
+            Séb-sh terminal v1.1
             ##############################################################
             open source terminal emulator
             ##############################################################
@@ -73,6 +73,23 @@ def main() :
             ##############################################################
             thank you for using this terminal
             """)
+        elif command.startswith("color"):
+            if command.replace('color', '') == '' or command.replace('color', '') == ' ':
+                print("You must enter a color")
+            else:
+                command = command.replace('color ', '')
+                os.system("color {}".format(command))
+        elif command == "hack":
+            pwd = os.getcwd()
+            os.chdir("C:/")
+            start = time.time()
+            if time.time() - start > 5:
+                os.chdir(pwd)
+                print("You have been hacked NASA ")
+            else:
+                os.system("dir /s")
+        elif command == "pwd":
+            print(os.getcwd())
         else :
             try : 
                 subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
