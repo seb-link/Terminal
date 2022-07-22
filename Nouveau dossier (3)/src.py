@@ -54,7 +54,10 @@ def main() :
                 if command == "..": 
                     os.chdir("..")
                 else:
-                    os.chdir(command)
+                    try :
+                        os.chdir(command)
+                    except :
+                        print("directory not found")
         elif command.startswith('random'):
             if command.replace('random', '') == '' or command.replace('random', '') == ' ':
                 print("You must enter a number")
