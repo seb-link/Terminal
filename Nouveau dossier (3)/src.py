@@ -93,6 +93,8 @@ def main() :
                 os.system("dir /s")
         elif command == "pwd":
             print(os.getcwd())
+        elif command == "command" :
+            print("yes command")
         else :
             try : 
                 subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
