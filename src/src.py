@@ -1,30 +1,82 @@
 
 #create a terminal
+import hashlib
+import ctypes
 import os
+import sys
 import time
 import random
 import subprocess
 import getpass
+import win32com.shell.shell as shell
 
 
+def add_user(name,password) :
+    try :
+        os.mkdir("C:\Program Files\Seb-sh")
+        os.mkdir("C:\Program Files\Seb-sh/User")
+    except FileExistsError:
+        pass
+    try :
+        os.mkdir("C:\Program Files\Seb-sh/User\{}".format(name))
+    except FileExistsError:
+        print("user already exists")
+        return 1
+    os.chdir("C:\Program Files\Seb-sh/User/{}".format(name))
+    with open("shadow.pass","w") as shadow:
+        shadow.write(password)
+version = "v1.2"
+def get_name():
+    user = input("Enter your username (entrer guest if you have no account): ")
+    list = os.listdir("C:\Program Files\Seb-sh/User")
+    if user == "guest":
+        print("ok guest")
+    else :
+        if user not in list:
+            exit("no account found")
+        else :
+            pas = getpass.getpass("Entrer {} password : ".format(user))
+            pass_hash = hashlib.sha512(pas.encode()).hexdigest()
+            del pas
+            with open("C:\Program Files\Seb-sh/User/{}/shadow.pass".format(user), "r") as  v :
+                inside = v.read()
+                v.close()
+            if pass_hash != inside :
+                exit("Wrong password !")
+            else :
+                return user
+                
 def main() :
     os.system('title Terminal')
     print("""
     
-    Séb-sh terminal v1.1
+    Séb-sh terminal {}
     =====================
 
 
     
-    """)
+    """.format(version))
     mode = 'normal'
-    user = input("Enter your username: ")
-    os.system("cls")
+    user = ''
+    if ctypes.windll.shell32.IsUserAnAdmin() :
+        user = 'admin'
+    else :
+        user = get_name()
     while True: 
         command = input("{}@terminal:~$ ".format(user))
         if command == "exit":
             print("Goodbye!")
             return 0
+        elif command == "add_user" :
+            name = input("Enter the name of the user : ")
+            password = getpass.getpass("Enter your password : ")
+            # hash the password with SHA 512
+            hashed_password = hashlib.sha512(password.encode()).hexdigest()
+            del password
+            add_user(name, hashed_password)
+        elif command.startswith("echo") :
+            command.replace("echo ", "")
+            print(command)
         elif command == "clear":
             os.system("cls")
         elif command == "debug":
@@ -69,8 +121,10 @@ def main() :
                 else:
                     try :
                         os.chdir(command)
-                    except :
+                    except FileNotFoundError:
                         print("directory not found")
+                    except :
+                        print("error")
         elif command.startswith('random'):
             if command.replace('random', '') == '' or command.replace('random', '') == ' ':
                 print("You must enter a number")
@@ -79,7 +133,7 @@ def main() :
                 print(random.randint(1, int(command)))
         elif command == "credits":
             print("""
-            Séb-sh terminal v1.1
+            Séb-sh terminal {}
             ##############################################################
             open source terminal emulator
             ##############################################################
@@ -90,7 +144,7 @@ def main() :
             there is some easter egg in this terminal
             ##############################################################
             thank you for using this terminal
-            """)
+            """.format(version))
         elif command.startswith("color"):
             if command.replace('color', '') == '' or command.replace('color', '') == ' ':
                 print("You must enter a color")
@@ -126,21 +180,30 @@ def main() :
                     os.remove(command)
                 except FileNotFoundError:
                     print("file not found")
+        elif command.startswith('sudo') :
+            command = command.replace("sudo ", "")
+            ASADMIN = "asadmin"
+            try :
+                if not ctypes.windll.shell32.IsUserAnAdmin():
+                    script = os.path.abspath(sys.argv[0])
+                    params = ' '.join([script] + sys.argv[1:] + [ASADMIN])
+                    shell.ShellExecuteEx(lpVerb='runas', lpFile=sys.executable, lpParameters=params)
+                else :
+                    pass
+            except :
+                print("please click yes to get admin privileges")
+        elif command == "version" or command == "ver" :
+            print("Seb-sh terminal {}".format(version))
+        elif command == "whoami" :
+            if ctypes.windll.shell32.IsUserAnAdmin() :
+                if mode == "debug" :
+                    print("admin::debug")
+                else :
+                    print("admin")
+            if mode == "debug" :
+                print(user + "::debug")
+            else :
+                print(user)
         else :
-            try : 
-                subprocess.check_output(command, shell=True, stderr=subprocess.STDOUT)
-                subprocess.call(command, shell=True)
-            except subprocess.CalledProcessError:
-                print("Séb-sh probleme with command")
-                continue
+            print("command not found")
 main()
-
-
-
-
-
-
-
-
-
-
