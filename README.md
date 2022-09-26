@@ -1,8 +1,8 @@
 # Terminal
 Terminal
 
-an useless Terminal by Seb-Link
+Terminal by Seb-Link
 
 
-
+like a mini OS
 
