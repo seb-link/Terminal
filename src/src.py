@@ -31,7 +31,7 @@ def add_user(name,password,group) :
         g.close()
     # mettre group.info en read-only
     os.system('powershell("sp group.info IsReadOnly $true")')
-version = "v1.2"
+version = "v1.3"
 def get_name():
     user = input("Enter your username (entrer guest if you have no account): ")
     list = os.listdir("C:\Program Files\Seb-sh/User")
