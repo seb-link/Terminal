@@ -3,6 +3,7 @@
 import hashlib
 import ctypes
 import os
+from pathlib import Path
 import sys
 import time
 import random
@@ -11,7 +12,7 @@ import getpass
 import win32com.shell.shell as shell
 
 
-def add_user(name,password) :
+def add_user(name,password,group) :
     try :
         os.mkdir("C:\Program Files\Seb-sh")
         os.mkdir("C:\Program Files\Seb-sh/User")
@@ -25,6 +26,11 @@ def add_user(name,password) :
     os.chdir("C:\Program Files\Seb-sh/User/{}".format(name))
     with open("shadow.pass","w") as shadow:
         shadow.write(password)
+    with open("group.info","w") as g:
+        g.write(group)
+        g.close()
+    # mettre group.info en read-only
+    os.system('powershell("sp group.info IsReadOnly $true")')
 version = "v1.2"
 def get_name():
     user = input("Enter your username (entrer guest if you have no account): ")
@@ -46,6 +52,47 @@ def get_name():
             else :
                 return user
                 
+def perm(name,group) :
+    try :
+        os.mkdir("C:\Program Files\Seb-sh/conf")
+        os.mkdir("C:\Program Files\Seb-sh/conf/perm")
+    except FileExistsError:
+        pass
+    try :
+        f = open("C:\Program Files\Seb-sh/User/{}".format(name) , "r")
+        f.close()
+    except FileExistsError:
+        exit("user don't exist lol")
+    if "C:\Program Files\Seb-sh/conf/perm/admin".exists() :
+        pass
+    else :
+        try :
+            perm = open("C:\Program Files\Seb-sh/conf/perm/{}".format(group),"w")
+        except FileExistsError:
+            pass
+        perm.write("{} \n".format(name))
+
+
+def check_integrity() :
+    try :
+        os.mkdir("C:\Program Files\Seb-sh/conf")
+        os.mkdir("C:\Program Files\Seb-sh/conf/perm")
+        os.mkdir("C:\Program Files\Seb-sh/User")
+        if os.path.exists("C:\Program Files\Seb-sh/conf/perm/admin") :
+            pass
+        else :
+            print('no group name "admin"')
+            return
+    except FileExistsError:
+        print("ok all good !")
+
+def get_group(user) :
+    try :
+        f = open("C:\Program Files\Seb-sh/User\{}\group.info".format(user), "r")
+        group = f.read()
+    except FileNotFoundError :
+        print("user do not exist")
+    return group
 def main() :
     os.system('title Terminal')
     print("""
@@ -67,13 +114,18 @@ def main() :
         if command == "exit":
             print("Goodbye!")
             return 0
-        elif command == "add_user" :
+        elif command == "perm" :
+            name = input("Enter the user name : ")
+            group = input("Enter the group to move :")
+            perm(name,group)
+        elif command == "add_user" : 
             name = input("Enter the name of the user : ")
             password = getpass.getpass("Enter your password : ")
             # hash the password with SHA 512
             hashed_password = hashlib.sha512(password.encode()).hexdigest()
             del password
-            add_user(name, hashed_password)
+            group = input("Enter the user group : ")
+            add_user(name, hashed_password, group)
         elif command.startswith("echo") :
             command.replace("echo ", "")
             print(command)
@@ -182,16 +234,8 @@ def main() :
                     print("file not found")
         elif command.startswith('sudo') :
             command = command.replace("sudo ", "")
-            ASADMIN = "asadmin"
-            try :
-                if not ctypes.windll.shell32.IsUserAnAdmin():
-                    script = os.path.abspath(sys.argv[0])
-                    params = ' '.join([script] + sys.argv[1:] + [ASADMIN])
-                    shell.ShellExecuteEx(lpVerb='runas', lpFile=sys.executable, lpParameters=params)
-                else :
-                    pass
-            except :
-                print("please click yes to get admin privileges")
+            if get_group(user) != "admin" :
+                print("access denied !")
         elif command == "version" or command == "ver" :
             print("Seb-sh terminal {}".format(version))
         elif command == "whoami" :
@@ -200,10 +244,13 @@ def main() :
                     print("admin::debug")
                 else :
                     print("admin")
-            if mode == "debug" :
+            elif mode == "debug" :
                 print(user + "::debug")
             else :
                 print(user)
         else :
             print("command not found")
-main()
+def inisialize():
+    check_integrity()
+    main()
+inisialize()
